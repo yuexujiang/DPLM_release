@@ -1,0 +1,7 @@
+encoder:
+  model_name:  facebook/esm2_t33_650M_UR50D
+  adapter_h:
+    enable: True
+    num_end_adapter_layers: [16,4]
+    module_type: "MLP1"
+    freeze_adapter_layers: [True,True]
