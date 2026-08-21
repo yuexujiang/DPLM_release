@@ -382,3 +382,13 @@ the same layout (§2).
 | ΔΔG S669 test / S8754 train | `ddg/S669.csv`, `ddg/S8754.csv` | Hugging Face Datasets |
 | De novo designed ΔΔG subset (146 proteins) | `ddg_designed/tsuboyama_designed146_mutations.csv` | Hugging Face Datasets |
 | ProteinGym viral manifests | `proteingym/viral18_manifest.csv` | Hugging Face Datasets|
+
+---
+
+## Citation
+
+If you use this code or the pretrained models, please cite the following paper:
+### DPLM: Dynamics-aware Protein Language Model via contrastive learning between sequence and molecular dynamics simulation trajectory
+
+Yuexu Jiang, Duolin Wang, Ibrahim A. Imam, Dong Xu, Qing Shao
+bioRxiv 2026.04.29.721692; doi: https://doi.org/10.64898/2026.04.29.721692
