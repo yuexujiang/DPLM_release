@@ -79,11 +79,9 @@ Resume an interrupted run with `--resume_path <ckpt> --restart_optimizer 0`.
 
 ## 3. Pretrained checkpoint
 
-The released DPLM checkpoint is hosted on HuggingFace, together with the exact training
-configuration it was produced with:
+The released DPLM checkpoint is hosted on HuggingFace Models <https://huggingface.co/Yuexuhug/DPLM/>, together with the exact training
+configuration `config_dplm.yaml` it was produced with.
 
-
-**`https://huggingface.co/Yuexuhug/DPLM/`**
 
 ```bash
 pip install huggingface_hub
@@ -219,7 +217,7 @@ for i in site:
 
 ### 5.3 ΔΔG of a point mutation — site-aware adapter head
 
-Model: `best_model_cor.pth` (Download from the huggingface datasets and put it under evaluate/ddg_S669/checkpoints — it contains its own
+Model: `best_model_cor.pth` (Download from the huggingface Models <https://huggingface.co/Yuexuhug/DPLM_ddg> and put it under evaluate/ddg_S669/checkpoints — it contains its own
 ESM2+adapter encoder, so it does **not** reuse the `model` from §4) with
 `ddg_config_siteaware_v3.yaml`. It predicts ΔΔG directly from the wild-type sequence, the
 mutant sequence and the 0-indexed mutated position.
@@ -367,7 +365,7 @@ python evaluate/fitness/collect_viral_results.py --results_dir ./results/viral
 
 ## 7. Datasets
 
-All datasets for training and evaluation can be download from the Hugging Face Datasets <https://huggingface.co/Yuexuhug/DPLM/>, or from the original work.
+All datasets for training and evaluation can be download from the Hugging Face Datasets <https://huggingface.co/datasets/Yuexuhug/DPLM>, or from the original work.
 All paths below are relative to `$DATA`, the directory you download the datasets into.
 Set `export DATA=/path/to/DPLM_data` and use it consistently; the training config expects
 the same layout (§2).
