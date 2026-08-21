@@ -15,7 +15,7 @@ encoder:
   tune_embedding: False
   adapter_h:
     enable: True
-    num_end_adapter_layers: [16,10]
+    num_end_adapter_layers: [10,4]
     module_type: "MLP1"
     freeze_adapter_layers: [True,False]
   fine_tune:

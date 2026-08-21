@@ -82,12 +82,12 @@ Resume an interrupted run with `--resume_path <ckpt> --restart_optimizer 0`.
 The released DPLM checkpoint is hosted on HuggingFace, together with the exact training
 configuration it was produced with:
 
-<!-- TODO: replace with the real repo id once uploaded -->
-**`https://huggingface.co/<ORG>/<MODEL_REPO>`**
+
+**`https://huggingface.co/Yuexuhug/DPLM/`**
 
 ```bash
 pip install huggingface_hub
-huggingface-cli download <ORG>/<MODEL_REPO> --local-dir ./checkpoints
+huggingface-cli download Yuexuhug/DPLM --local-dir ./checkpoints
 # -> ./checkpoints/checkpoint_best_val_rmsf_cor.pth   (~3.2 GB)
 # -> ./checkpoints/config_dplm.yaml                   (the config used to train it)
 ```
@@ -96,8 +96,7 @@ or in Python:
 
 ```python
 from huggingface_hub import hf_hub_download
-ckpt = hf_hub_download('<ORG>/<MODEL_REPO>', 'checkpoint_best_val_rmsf_cor.pth')
-cfg  = hf_hub_download('<ORG>/<MODEL_REPO>', 'config_dplm.yaml')
+ckpt = hf_hub_download('Yuexuhug/DPLM', 'checkpoint_best_val_rmsf_cor.pth')
 ```
 
 Use the `config_dplm.yaml` shipped **with the checkpoint** for inference and for the
@@ -107,7 +106,7 @@ training.
 
 ```bash
 export CKPT=./checkpoints/checkpoint_best_val_rmsf_cor.pth
-export CFG=./checkpoints/config_dplm.yaml
+export CFG=./configs/config_dplm.yaml
 ```
 
 ## 4. Extracting protein representations
@@ -175,14 +174,14 @@ alongside the checkpoint (§3); the snippets below assume `model`, `alphabet`, `
 
 ### 5.1 Phase separation — protein level, XGBoost
 
-Model: `Phase_sep/xgboost/xgb_phase_sep.pkl` (a pickled `XGBClassifier`).
+Model: `evaluate/Phase_sep/xgb_phase_sep.pkl` (a pickled `XGBClassifier`).
 Input: one **mean-pooled** 1280-d vector per protein.
 
 ```python
 import pickle, numpy as np
 from infer import embed_sequences
 
-xgb = pickle.load(open('Phase_sep/xgboost/xgb_phase_sep.pkl', 'rb'))
+xgb = pickle.load(open('evaluate/Phase_sep/xgb_phase_sep.pkl', 'rb'))
 
 seqs = [('my_protein', 'MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAPILSRVGDG...')]
 _, X = embed_sequences(model, alphabet, seqs, batch_size=8,
@@ -195,7 +194,7 @@ for (pid, _), p in zip(seqs, prob):
 
 ### 5.2 Cryptic binding sites — per residue, XGBoost
 
-Model: `cryptobench_dplm/xgb_pred/checkpoints/xgb_model.json` plus `threshold.json`
+Model: `evaluate/cryptobench_dplm/checkpoints/xgb_model.json` plus `threshold.json`
 (the F1-optimal cut, **0.5975** — not 0.5, because the task is ~19:1 imbalanced).
 Input: the **per-residue** 1280-d vectors; each residue is scored independently.
 
@@ -203,8 +202,8 @@ Input: the **per-residue** 1280-d vectors; each residue is scored independently.
 import json, xgboost as xgb, numpy as np
 from infer import embed_sequences
 
-booster = xgb.Booster(); booster.load_model('cryptobench_dplm/xgb_pred/checkpoints/xgb_model.json')
-thr = json.load(open('cryptobench_dplm/xgb_pred/checkpoints/threshold.json'))['threshold']
+booster = xgb.Booster(); booster.load_model('evaluate/cryptobench_dplm/checkpoints/xgb_model.json')
+thr = json.load(open('evaluate/cryptobench_dplm/checkpoints/threshold.json'))['threshold']
 
 seq = 'MKTAYIAKQRQISFVKSHFSRQLEERLGLIEVQAPILSRVGDGTQDNLSGAEKAVQVKVKALPDAQFEVVHSLAKWKR'
 ids, R = embed_sequences(model, alphabet, [('my_protein', seq)], batch_size=1,
@@ -220,7 +219,7 @@ for i in site:
 
 ### 5.3 ΔΔG of a point mutation — site-aware adapter head
 
-Model: `ddg_adam_v9_sw3/checkpoints/best_model_cor.pth` (2.9 GB — it contains its own
+Model: `best_model_cor.pth` (Download from the huggingface datasets and put it under evaluate/ddg_S669/checkpoints — it contains its own
 ESM2+adapter encoder, so it does **not** reuse the `model` from §4) with
 `ddg_config_siteaware_v3.yaml`. It predicts ΔΔG directly from the wild-type sequence, the
 mutant sequence and the 0-indexed mutated position.
@@ -234,11 +233,11 @@ from model_ddg_v2 import prepare_models_v2
 # NOTE: the ddG head uses its OWN config schema (optimizer.lr, not the training config's
 # optimizer.lr_seq), so utils.utils.load_configs does NOT apply here — Box-wrap the YAML
 # directly, exactly as train_ddg_v2._load_configs does.
-cfg = Box(yaml.full_load(open('ddg_adam_v9_sw3/ddg_config_siteaware_v3.yaml')))
+cfg = Box(yaml.full_load(open('ddg_config_siteaware_v3.yaml')))
 cfg.encoder.adapter_h.num_end_adapter_layers = [10, 4]      # must match the trained head
 cfg.train_settings.device = str(device)      # the YAML hardcodes 'cuda'; override for CPU
 net = prepare_models_v2(cfg, logging)        # needs a logger, not None
-ckpt = torch.load('ddg_adam_v9_sw3/checkpoints/best_model_cor.pth', map_location='cpu')
+ckpt = torch.load('checkpoints/best_model_cor.pth', map_location='cpu')
 net.load_state_dict(ckpt['model_state_dict'])
 net.eval().to(device)
 
@@ -257,15 +256,6 @@ print(f'predicted ddG = {float(ddg[0]):.3f} kcal/mol '
 
 Sign convention follows the S669 training data: **positive ΔΔG = destabilising**.
 
-### Where the trained heads live on LCC
-
-| task | head |
-|---|---|
-| phase separation | `$V/Phase_sep/xgboost/xgb_phase_sep.pkl` |
-| cryptic binding site | `$V/cryptobench_dplm/xgb_pred/checkpoints/{xgb_model.json,threshold.json}` |
-| ΔΔG (site-aware) | `results/ddg_adam_v9_sw3/checkpoints/best_model_cor.pth` + its `ddg_config_siteaware_v3.yaml` |
-
-with `V=$DATA/old_results/comparable/lcc_adam_v9`.
 
 ## 6. Reproducing the evaluation results
 
@@ -371,50 +361,26 @@ python evaluate/fitness/predict_fitness_viral.py --methods dplm \
 python evaluate/fitness/collect_viral_results.py --results_dir ./results/viral
 ```
 
-Reference outputs for all of the above, produced with the released checkpoint on the **full
-(unfiltered)** datasets, are published alongside the checkpoint — subdirectories `rmsf/`,
-`ablation/`, `MD_emb_eval/`, `Phase_sep/`, `cryptobench_dplm/`, `ddg_meg_adam_v9/`,
-`ddg_S669/` and `fitness41/`.
 
-Notes that matter for exact reproduction:
-
-* **DCCM tasks read `processed_data_rep2`**, which is the ATLAS *training* partition. That is
-  how the published numbers were produced. Pass `--data_path $DATA/processed_test_rep2` to
-  score held-out proteins instead.
-* **RMSF replicates.** `--rmsf_col` selects `RMSF_R1`, `RMSF_R2` (default) or `RMSF_R3`. The
-  choice moves the mean correlation by less than 0.01.
-* **The designed subset is 146 proteins, not 156.** An earlier extraction called a protein
-  designed whenever its `WT_name` did not start with a 4-character PDB id, which wrongly
-  included 10 `v2*` entries that embed real PDB ids and are natural domains. Excluding them
-  reproduces the source paper's 331 natural / 148 designed split (146 survive the ddG/indel
-  quality filter). `designed146_protein_list.csv` is the canonical list.
-* **XGBoost and linear heads are deterministic**; the supervised DCCM head is seeded via
-  `--seeds`. Contrastive training itself is seeded through `fix_seed` in the config, but
-  run-to-run variation in validation RMSF correlation is still substantial — compare
-  configurations across several seeds, never from single runs.
 
 ---
 
 ## 7. Datasets
 
+All datasets for training and evaluation can be download from the Hugging Face Datasets <https://huggingface.co/Yuexuhug/DPLM/>, or from the original work.
 All paths below are relative to `$DATA`, the directory you download the datasets into.
 Set `export DATA=/path/to/DPLM_data` and use it consistently; the training config expects
 the same layout (§2).
 
 | purpose | path | size |
 |---|---|---|
-| ATLAS MD embeddings, training split (3 replicates) | `processed_data_rep{0,1,2}/` | 1.5 G each |
-| ATLAS MD embeddings, held-out split (3 replicates) | `processed_test_rep{0,1,2}/` | 74 M each |
-| ATLAS structures + per-residue RMSF/Bfactor/Neq tables | `analysis/{pid}_analysis/` | 111 G |
-| Ground-truth DCCM matrices | `DCCM_dir3/` | 3.6 G |
-| Phase separation (Molphase train + test tables S1–S5) | `Phase_sep/` | 3.6 M |
-| CryptoBench dataset + mmCIF structures | `cryptobench/cryptobench-dataset/` | 6.5 G |
-| Mega-scale ΔΔG (Tsuboyama 2023) | `ddg/Tsuboyama2023_Dataset2_Dataset3_20230416.csv` | 666 M |
-| ΔΔG S669 test / S8754 train | `ddg/S669.csv`, `ddg/S8754.csv` | 512 K / 3.0 M |
-| De novo designed ΔΔG subset (146 proteins) | `ddg_designed/tsuboyama_designed146_mutations.csv` | 75 M |
-| ProteinGym viral manifests | `proteingym/viral{23,31}_manifest.csv` | 512 K |
-| ProteinGym DMS assay tables | `proteingym/DMS_ProteinGym_substitutions/` | 1.1 G |
-| **Released DPLM checkpoint** | HuggingFace, see §3 — *not* under `$DATA` | 3.2 G |
-
-Original sources: ATLAS (<https://www.dsimb.inserm.fr/ATLAS>), CryptoBench, Tsuboyama et al.
-2023 Mega-scale stability, S669/S8754, MolPhase, and ProteinGym v1.2.
+| ATLAS MD embeddings, training split (3 replicates) | `processed_data_rep{0,1,2}/` | Hugging Face Datasets |
+| ATLAS MD embeddings, held-out split (3 replicates) | `processed_test_rep{0,1,2}/` | Hugging Face Datasets |
+| ATLAS structures + per-residue RMSF/Bfactor/Neq tables | `analysis/{pid}_analysis/` | https://www.dsimb.inserm.fr/ATLAS/index.html |
+| Ground-truth DCCM matrices | `DCCM_dir3/` | Hugging Face Datasets |
+| Phase separation (Molphase train + test tables S1–S5) | `Phase_sep/` | Hugging Face Datasets |
+| CryptoBench dataset + mmCIF structures | `cryptobench/cryptobench-dataset/` | <https://osf.io/pz4a9/files/osfstorage>|
+| Mega-scale ΔΔG (Tsuboyama 2023) | `ddg/Tsuboyama2023_Dataset2_Dataset3_20230416.csv` | <https://zenodo.org/records/7992926> |
+| ΔΔG S669 test / S8754 train | `ddg/S669.csv`, `ddg/S8754.csv` | Hugging Face Datasets |
+| De novo designed ΔΔG subset (146 proteins) | `ddg_designed/tsuboyama_designed146_mutations.csv` | Hugging Face Datasets |
+| ProteinGym viral manifests | `proteingym/viral18_manifest.csv` | Hugging Face Datasets|
