@@ -63,7 +63,14 @@ class RotaryEmbedding(torch.nn.Module):
     def forward(self, q: torch.Tensor, k: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
         self._cos_cached, self._sin_cached = self._update_cos_sin_tables(k, seq_dimension=-2)
 
+        # Clone before use: the cache may have been populated during an eval/inference-mode
+        # forward pass (e.g. Accelerate wraps eval forwards with torch.inference_mode()).
+        # Inference tensors cannot be saved for autograd backward, so cloning here converts
+        # them back to normal tensors that work in both training and eval contexts.
+        cos = self._cos_cached.clone()
+        sin = self._sin_cached.clone()
+
         return (
-            apply_rotary_pos_emb(q, self._cos_cached, self._sin_cached),
-            apply_rotary_pos_emb(k, self._cos_cached, self._sin_cached),
+            apply_rotary_pos_emb(q, cos, sin),
+            apply_rotary_pos_emb(k, cos, sin),
         )

@@ -1,0 +1,18 @@
+result_path: ./results/cryptobench_dplm
+
+# Paths (update on Delta)
+dataset_dir: evaluate/cryptobench/cryptobench/cryptobench-dataset
+emb_dir:     /scratch/bcnr/yjiang12/DPLM_data/cryptobench_embeddings
+
+max_len: 1022   # ESM2 residue limit
+
+train:
+  input_dim:    1280   # DPLM ESM2-650M embedding dim (vs. 2560 for ESM2-3B)
+  hidden_dim:   256    # matches paper architecture
+  dropout:      0.3    # matches paper
+  lr:           1e-4   # matches paper
+  weight_decay: 1e-4   # L2 regularization, matches paper
+  num_epochs:   7      # matches paper
+  batch_size:   8      # proteins per batch (residues concatenated inside collate)
+
+device: cuda

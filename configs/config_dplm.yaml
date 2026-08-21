@@ -1,0 +1,106 @@
+# DPLM training configuration (the published setting: ESM2-650M + 10 Houlsby adapter
+# layers, Adam lr 7e-5, batch 32, fixed temperature 0.1, 30000 steps).
+#
+# ⚠ BEFORE TRAINING: replace every '/path/to/DPLM_data' below with the directory you
+#   downloaded the ATLAS data into (7 occurrences: 6 Atlas_*_path + analysis_path).
+#     sed -i "s|/path/to/DPLM_data|$DATA|g" configs/config_dplm.yaml
+#
+fix_seed: 0
+checkpoints_every: 500
+tensorboard_log: True
+result_path: ./results/test
+# HF_cache_path: ./HF_cashe_path
+
+resume:
+  resume: False
+  resume_path: /work/nvme/bcnr/jyx/DPLM_ai/results/vivit3/checkpoints/checkpoint_best_val_rmsf_cor.pth
+  restart_optimizer: True
+
+model:
+  residue_out_dim: 64
+  protein_out_dim: 1024
+  residue_num_projector: 1
+  protein_num_projector: 2
+  X_module: MD #structure
+
+  MD_encoder:
+    model_name: google/vivit-b-16x2-kinetics400
+    residue_inner_dim: 1024
+    protein_inner_dim: 4096
+    dim_mlp: 768
+    fine_tuning:
+         enable: False
+    fine_tuning_projct:
+         enable: True
+  esm_encoder:
+    model_name:  esm2_t33_650M_UR50D # esm2_t33_650M_UR50D, esm2_t30_150M_UR50D, esm2_t36_3B_UR50D
+    max_length: 512
+    residue_inner_dim: 1024
+    protein_inner_dim: 4096
+    fine_tuning:
+      enable: False
+      unfix_last_layer: 4
+    adapter_h:
+      enable: True
+      num_end_adapter_layers: 10
+      module_type: "MLP1"
+      freeze_adapter_layers: False
+    lora:
+      enable: False
+      r: 8
+      alpha: 32
+      dropout: 0.05
+      resume:
+        enable: False
+        checkpoint_path: path/to/checkpoints.pth
+
+
+train_settings:
+  Atlas_data_repli_0_path: /path/to/DPLM_data/processed_data_rep0
+  Atlas_data_repli_1_path: /path/to/DPLM_data/processed_data_rep1
+  Atlas_data_repli_2_path: /path/to/DPLM_data/processed_data_rep2
+  Atlas_test_repli_0_path: /path/to/DPLM_data/processed_test_rep0
+  Atlas_test_repli_1_path: /path/to/DPLM_data/processed_test_rep1
+  Atlas_test_repli_2_path: /path/to/DPLM_data/processed_test_rep2
+  num_steps: 30000           # was: 6000
+  shuffle: True
+  mixed_precision: "bf16"
+  batch_size: 32
+  residue_batch_size: 2000
+  num_workers: 1
+  gradient_accumulation: 1
+  n_views: 2
+  temperature: 0.1
+  learnable_temperature: False   # was: False — allows model to calibrate contrastive sharpness
+  md_noise:
+    enable: False
+    sigma: 0.02
+  multi_positive: False
+  loss_type: info_nce
+
+
+valid_settings:
+  analysis_path: /path/to/DPLM_data/analysis/
+  do_every: 50 # steps
+  num_workers: 1
+  batch_size: 64
+
+
+optimizer:
+  name: adam             # was: sgd — Adam converges far faster for transformer fine-tuning
+  lr_seq: 7e-5           # was: 1e-4 (slightly lower for Adam stability)
+  lr_x: 7e-5
+  weight_decouple: True
+  weight_decay: 0.0005
+  eps: 1e-8              # was: 1e-16
+  beta_1: 0.9
+  beta_2: 0.999
+  grad_clip_norm: 1      # was: 0 — enable gradient clipping
+  decay:
+    warmup: 500          # was: 300
+    min_lr_seq: 1e-6     # was: 0
+    min_lr_struct: 0
+    min_lr_MD: 0
+    min_lr_x: 1e-6       # was: 0
+    gamma: 1
+    first_cycle_steps: null

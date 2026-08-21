@@ -1,0 +1,31 @@
+# Conda environment for DPLM — mirrors the `dplm_env` used for all published results.
+#   conda env create -f environment.yml && conda activate dplm_env
+#
+# torch is pinned to the CUDA 12.4 build; on a different CUDA/CPU host install torch
+# separately from https://pytorch.org and then `pip install -r requirements.txt`.
+name: dplm_env
+channels: [conda-forge, defaults]
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - torch==2.4.0
+      - numpy==1.26.3
+      - pandas==2.2.3
+      - scipy==1.15.3
+      - scikit-learn==1.7.2
+      - xgboost==2.1.4
+      - matplotlib==3.10.7
+      - seaborn==0.13.2
+      - pyyaml==6.0.3
+      - h5py==3.14.0
+      - transformers==4.57.1
+      - fair-esm==2.0.0
+      - accelerate==0.24.1
+      - biopython==1.86
+      - tqdm==4.67.1
+      - umap-learn==0.5.12
+      - openpyxl==3.1.5
+      - einops==0.8.2
+      - tensorboard==2.20.0
+      - wandb==0.23.0
