@@ -43,22 +43,24 @@ import esm
 import esm_adapterH
 from peft import LoraConfig, get_peft_model
 
-from utils.utils import load_configs, load_esm2_checkpoint
+from utils.utils import load_configs, load_dplm_checkpoint
 
 
 # ---------------------------------------------------------------------------
 # Model building
 # ---------------------------------------------------------------------------
 
-def build_esm2_model(configs, device):
-    """Instantiate the raw ESM2 model (with adapters / LoRA if configured).
+def build_dplm_model(configs, device):
+    """Instantiate the DPLM sequence encoder: ESM2 plus the Houlsby adapters that the
+    contrastive training fits (and LoRA, if the config enables it).
 
-    Mirrors the load_model logic from evaluate/aa_emb_MDfeature.py so the
-    architecture exactly matches what was used during training.
+    This builds the ARCHITECTURE only — call load_dplm_checkpoint() afterwards to load the
+    trained DPLM weights into it. The architecture is derived from the config so it matches
+    exactly what was used during training.
 
     Returns
     -------
-    model   : nn.Module  — raw esm2 model ready for weight loading
+    model   : nn.Module  — DPLM encoder, ready for weight loading
     alphabet : esm.Alphabet
     """
     enc = configs.model.esm_encoder
@@ -271,10 +273,10 @@ def main():
 
     # ---- model ----
     print("Building ESM2 model...")
-    model, alphabet = build_esm2_model(configs, device)
+    model, alphabet = build_dplm_model(configs, device)
 
     print("Loading checkpoint...")
-    load_esm2_checkpoint(model, args.checkpoint_path)
+    load_dplm_checkpoint(model, args.checkpoint_path)
     model.eval()
 
     # ---- sequences ----

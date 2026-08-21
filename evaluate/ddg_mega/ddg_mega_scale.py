@@ -53,7 +53,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import esm
 import esm_adapterH
-from utils.utils import load_configs, load_esm2_checkpoint
+from utils.utils import load_configs, load_dplm_checkpoint
 
 warnings.filterwarnings('ignore')
 
@@ -136,7 +136,7 @@ def _load_model(args, device):
         else:
             model, alphabet = esm.pretrained.esm2_t33_650M_UR50D()
 
-        load_esm2_checkpoint(model, args.checkpoint_path)
+        load_dplm_checkpoint(model, args.checkpoint_path)
 
     else:  # 'ESM2' — plain pretrained model, no fine-tuning
         model, alphabet = esm.pretrained.esm2_t33_650M_UR50D()

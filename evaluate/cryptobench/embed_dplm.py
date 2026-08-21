@@ -46,8 +46,8 @@ from Bio.Data.IUPACData import protein_letters_3to1
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
-from infer import build_esm2_model, embed_sequences
-from utils.utils import load_configs, load_esm2_checkpoint
+from infer import build_dplm_model, embed_sequences
+from utils.utils import load_configs, load_dplm_checkpoint
 
 
 # ── CIF sequence extraction ───────────────────────────────────────────────────
@@ -243,10 +243,10 @@ def main():
         cfg_dict = yaml.full_load(f)
     configs = load_configs(cfg_dict)
     device  = torch.device(args.device if torch.cuda.is_available() else 'cpu')
-    model, alphabet = build_esm2_model(configs, device)
+    model, alphabet = build_dplm_model(configs, device)
 
     print(f"Loading DPLM checkpoint: {args.checkpoint}")
-    load_esm2_checkpoint(model, args.checkpoint)
+    load_dplm_checkpoint(model, args.checkpoint)
     model.eval()
 
     # Embed in batches

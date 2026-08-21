@@ -19,7 +19,7 @@ and feeds them through a small MLP head. The model is *direction-aware*
 
 The ESM2 + Houlsby-adapter backbone is built by reusing prepare_adapter_h_model /
 prepare_esm_model from model_ddg.py — identical adapter_0-frozen / adapter_1-trainable
-setup and the same DPLM-checkpoint compatibility (load_esm2_checkpoint).
+setup and the same DPLM-checkpoint compatibility (load_dplm_checkpoint).
 """
 
 import torch

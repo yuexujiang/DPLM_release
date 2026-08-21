@@ -6,9 +6,9 @@ Baseline encoders (ESM2, ProstT5, SeqDance/ESMDance, ESM-C, SPLM), combined-feat
 the MDGen and SPLM training arms, cluster job scripts, and the allostery analyses were all
 removed.
 
-## Two changes were made to the extracted code
+## Three changes were made to the extracted code
 
-Both are release-only; the research repository is untouched.
+All three are release-only; the research repository is untouched.
 
 1. **`evaluate/DCCM_v2/unsup_dccm_attn_v2.py`** — an unescaped `%` in an argparse help string
    made `--help` raise. Escaped to `%%`. No effect on behaviour.
@@ -17,6 +17,17 @@ Both are release-only; the research repository is untouched.
    was a top-level import. SPLM is a baseline and is not shipped, so the import now degrades
    to a stub that raises only if `--method splm` is actually selected. This module is present
    because `ddg_designed.py` imports `evaluate_proteins()` from it for the **DPLM** path.
+
+3. **Two functions were renamed** because their old names described the backbone rather than
+   the model they actually build and load:
+
+   | research repo | this release | what it does |
+   |---|---|---|
+   | `infer.build_esm2_model` | `infer.build_dplm_model` | builds the DPLM sequence encoder (ESM2 backbone + Houlsby adapters) |
+   | `utils.utils.load_esm2_checkpoint` | `utils.utils.load_dplm_checkpoint` | loads trained DPLM weights (`state_dict1`) into that encoder |
+
+   Every definition, import and call site in the tree was updated (10 `.py` files plus the
+   README); no old name remains anywhere. Behaviour is unchanged.
 
 ## Superseded modules were merged away
 
@@ -68,4 +79,6 @@ tableS4 (36 sequences) with the released checkpoint: ARI = 0.5942, both figures 
 ## Verified
 
 All 14 entry points import and respond to `--help` inside this tree, and every `.py` file
-parses, using the `dplm_env` environment described in `README.md`.
+parses, using the `dplm_env` environment described in `README.md`. The §4 representation
+example and the §5.1 / §5.2 / §5.3 prediction examples were additionally run end to end
+against the real checkpoints and heads on LCC, both before and after the rename above.

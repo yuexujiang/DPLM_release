@@ -43,7 +43,7 @@ from model_ddg_v2 import prepare_models_v2                          # local
 from data_ddg_v2 import prepare_dataloaders_v2                      # local
 from utils.utils import (
     get_logging, prepare_saving_dir, test_gpu_cuda,
-    save_checkpoint, load_esm2_checkpoint,
+    save_checkpoint, load_dplm_checkpoint,
 )
 
 
@@ -100,9 +100,9 @@ def _regression_loss(outputs, targets, configs, reduction='mean'):
 
 def _init_from_dplm(net, resume_path, logging, accelerator):
     """Load adapter_0 weights from a DPLM checkpoint into net.esm2 (adapter_0 stays
-    frozen; only adapter_1 + head train). See load_esm2_checkpoint for key remapping."""
+    frozen; only adapter_1 + head train). See load_dplm_checkpoint for key remapping."""
     raw_net = accelerator.unwrap_model(net)
-    load_esm2_checkpoint(raw_net.esm2, resume_path)
+    load_dplm_checkpoint(raw_net.esm2, resume_path)
     logging.info(f'DPLM checkpoint loaded → adapter_0 initialised: {resume_path}')
 
 

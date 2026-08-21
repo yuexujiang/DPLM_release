@@ -52,7 +52,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import spearmanr, mannwhitneyu, wilcoxon
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
-from utils.utils import load_configs, load_esm2_checkpoint
+from utils.utils import load_configs, load_dplm_checkpoint
 
 # Reuse data loading and embedding extraction from rmsf.py (same directory)
 sys.path.insert(0, os.path.dirname(__file__))
@@ -90,7 +90,7 @@ def _build_dplm(config_path, checkpoint_path, device):
     adapter_cfg = configs.model.esm_encoder.adapter_h
     model_name = getattr(configs.model.esm_encoder, 'model_name', 'esm2_t33_650M_UR50D')
     model, alphabet = getattr(esm_adapterH.pretrained, model_name)(adapter_cfg)
-    load_esm2_checkpoint(model, checkpoint_path)
+    load_dplm_checkpoint(model, checkpoint_path)
     return model, alphabet
 
 

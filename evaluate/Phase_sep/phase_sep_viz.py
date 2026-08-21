@@ -64,7 +64,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'methodology'))
 
 import esm
 import esm_adapterH
-from utils.utils import load_configs, load_esm2_checkpoint
+from utils.utils import load_configs, load_dplm_checkpoint
 # Reuse the canonical ProstT5 loader + per-residue extractor (same as rmsf.py, the ddg_mega /
 # ddg_S669 baselines and phase_separation_xgboost_prostt5.py all use) instead of duplicating it.
 # SPLM-V2-GVP: runs out-of-process (its packages collide with DPLM_ai's) — see splm_embed.
@@ -91,7 +91,7 @@ def _load_dplm(checkpoint_path, config_path, device):
     else:
         model, alphabet = esm.pretrained.esm2_t33_650M_UR50D()
 
-    load_esm2_checkpoint(model, checkpoint_path)
+    load_dplm_checkpoint(model, checkpoint_path)
     model.eval().to(device)
     print(f'[DPLM] checkpoint loaded: {checkpoint_path}')
     return model, alphabet

@@ -93,7 +93,7 @@ def load_checkpoints_md(simclr, configs,
         in both. When resuming a DIFFERENT model (e.g. SPLM) to init only the backbone/adapters,
         its projector heads (projectors_protein/residue) have a different out_dim than this
         config's — we drop those mismatched tensors so our freshly-initialised projectors are
-        kept instead of crashing. (ddg_S669's load_esm2_checkpoint avoids the crash only because
+        kept instead of crashing. (ddg_S669's load_dplm_checkpoint avoids the crash only because
         it targets a raw ESM2 with no projectors, so those keys are merely 'unexpected'.)
         The missing/unexpected report matters here to confirm the ADAPTER tensors actually
         loaded rather than silently staying at random init.
@@ -327,10 +327,10 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
-def load_esm2_checkpoint(model, checkpoint_path):
-    """Load simclr.model_seq weights from a training checkpoint into a raw esm2 model.
+def load_dplm_checkpoint(model, checkpoint_path):
+    """Load trained DPLM weights (simclr.model_seq) into a model from build_dplm_model().
 
-    The training checkpoint stores the full ESM2-wrapper state dict (keys prefixed with
+    The DPLM training checkpoint stores the sequence-branch state dict (keys prefixed with
     "esm2.") under 'state_dict1'.  This function strips that prefix and handles the
     adapter_layer → adapter_layer_dict.adapter_0 rename needed for older checkpoints.
     """
