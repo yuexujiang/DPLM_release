@@ -119,6 +119,3 @@ If you use DPLM in your research, please cite:
 [Add citation information here]
 ```
 
-## License
-
-[Add license information here]
